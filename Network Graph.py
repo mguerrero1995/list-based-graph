@@ -1,6 +1,16 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Thu Jun 13 11:45:59 2019
+
+@author: mguerrero
+"""
+
+
+# -*- coding: utf-8 -*-
 
 """ Classes related to list-based graphs. """
+
+import numpy as np
 
 class Node:
     def __init__(self, node_id):
@@ -8,7 +18,7 @@ class Node:
         self.neighbors = list()
 
     
-    def add_neighbor(self, node_id, weight, sort = "none"):
+    def add_neighbor(self, node_id, weight, sort = "node_id"):
         """ Adds a neighboring node (i.e. connected node) and a weight connecting it to the node.
             Format is [neighbor_id, weight of edge]. """
         if node_id not in [node_id[0] for node_id in self.neighbors]:
@@ -22,7 +32,7 @@ class Node:
                 pass
     
     
-    def remove_neighbor(self, node_id, sort = "none"):
+    def remove_neighbor(self, node_id, sort = "node_id"):
         """ Removes a neighboring node (i.e. connected node) and the weight connecting it to the node. """
         if node_id in [node_id[0] for node_id in self.neighbors]:
             self.neighbors = [neighbor for neighbor in self.neighbors if neighbor[0] != node_id]
@@ -109,13 +119,15 @@ class Graph:
     def add_edge(self, n1, n2, weight):
         """ Adds an edge with a weight between two nodes. """
         if n1 in self.nodes and n2 in self.nodes: # Check that both nodes are in the graph
-            # Connect the nodes to each other and update both nodes' information
-            self.nodes[n1].add_neighbor(n2, weight) 
-            self.nodes[n2].add_neighbor(n1, weight)
-            
-            # Update the weight and edge count for the graph            
-            self.graph_weight += weight
-            self.graph_edges += 1
+            # Update the weight and edge count for the graph if nodes are not already neighbros
+            if (n1 not in [node[0] for node in self.nodes[n2].neighbors] 
+                and n2 not in [node[0] for node in self.nodes[n1].neighbors]):
+                self.graph_weight += weight
+                self.graph_edges += 1
+                
+                # Connect the nodes to each other and update both nodes' information     
+                self.nodes[n1].add_neighbor(n2, weight) 
+                self.nodes[n2].add_neighbor(n1, weight)
             return True
         else:
             return False
@@ -175,47 +187,29 @@ class Graph:
         else: 
             return False
         
+    
+    def adj_mat(self): 
+        """ Returns a numpy array representing the adjaceny matrix of the graph. """
+        # return (self.graph_nodes, self.graph_nodes)
+        mat = np.zeros((self.graph_nodes, self.graph_nodes)) # Matrix of all zeros
+        nodes = [nodes[0] for nodes in self.nodes] # List of all node_id's in the graph
+        nodes.sort() # Make sure they are sorted
+        for node in nodes: # Loop through each node_id
+            neighbors = len([node for node in self.nodes[node].neighbors]) # node_id's of current node's neighbors
+            if neighbors == 0: # Check if the current node has any neighbors, and if not skip
+                next
+            else:
+                l = [0] * len(nodes) # List of one zero for each node in the graph
+                for ind in range(len(l)): # Loop through through the index for each node
+                    if ind == nodes.index(node): # Skip if the index of the current node (preserve zero on diagonal)
+                        next
+                    else:
+                        # Replace zeros with edge weights where they exist
+                        l[ind] = sum([node[1] for node in self.nodes[node].neighbors if node[0] == nodes[ind]])
+                mat[nodes.index(node)] = l # Set each row equal to the new edge weights
+        return mat
+                
     def print_graph(self):
+        """ Prints a description of the graph in plain English. """
         for node, neighbors in g.nodes.items():
             print("Node %s has neighbor(s) and weight(s) %s" % (node, neighbors.neighbors))
-    
-
-# Initialize an empty graph
-g = Graph()   
-
-# Create 3 node object
-n1 = Node("a")
-n2 = Node("b")
-n3 = Node("c")
-
-# Add the nodes to the graph
-g.add_node(n1)
-g.add_node(n2)
-g.add_node(n3)
-
-# Create a fully connected graph
-g.add_edge("a", "b", 5) # Add an edge from node a to node b, with weight 5
-g.add_edge("a", "c", 10) # Add an edge from node a to node c, with weight 10
-g.add_edge("b", "c", 15) # Add an edge from node b to node c, with weight 15
-
-# Check the summary statistics about the graph
-print(g.graph_weight, g.graph_edges, g.graph_nodes)
-
-# Remove the edge between a and b
-g.remove_edge("a", "b")
-
-# See the new summary - weight should be reduced by 5, edges by reduced by 1, and nodes unchanged
-print(g.graph_weight, g.graph_edges, g.graph_nodes)
-
-g.add_edge("a", "b", 5) # Replace the removed node
-print(g.graph_weight, g.graph_edges, g.graph_nodes)
-
-# Use the node removal method to completely remove node b and its edges
-g.remove_node("b")
-
-# See the new summary - weight should be reduced by 20, edges by reduced by 2, and nodes reduced by 1
-print(g.graph_weight, g.graph_edges, g.graph_nodes)
-
-# Print out all the nodes and their neighbors/weights
-g.print_graph()
-
