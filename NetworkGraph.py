@@ -296,5 +296,3 @@ class Graph:
         """ Print the structure of the graph in plain English. Best used with smaller graphs. """
         for node, neighbors in self.nodes.items():
             print("Node %s has neighbor(s) and weight(s) %s" % (node, neighbors.neighbors))
-
-
